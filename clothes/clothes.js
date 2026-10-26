@@ -1,1 +1,0 @@
-wardrobe.addEventListener("click", () => wardrobe.classList.add("open"), { once: true });

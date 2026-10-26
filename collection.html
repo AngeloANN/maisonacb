@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collection — Maison ACB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0b0b;
+    --gap: 16px;
+    --strip-gap: 0px;          /* space between the copies of the doors (photo-booth look). 0 = seamless elevator */
+    --roll-time: 2.8s;          /* how long the doors roll before stopping */
+    --brass: #b08d57;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: #fff; font-family: Inter, system-ui, sans-serif; overflow: hidden; }
+  a { color: inherit; }
+
+  /* ---------- Page layout: Tops on the left (full height), Bags + Bottoms stacked on the right ---------- */
+  .collection {
+    display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr 1fr;
+    gap: var(--gap); height: 100dvh; padding: var(--gap);
+  }
+  .tops    { grid-row: 1 / 3; }
+  .bags    { grid-column: 2; grid-row: 1; }
+  .bottoms { grid-column: 2; grid-row: 2; }
+
+  h1 {
+      color: var(--brass);
+  }
+
+  /* ---------- One cabinet: window (moving parts) + frame (fixed, on top) ---------- */
+  .unit { position: relative; }
+  .tops { height: 100%; aspect-ratio: 760 / 1634; }   /* same shape as the wardrobe image */
+
+  /* The hole in the frame. Only what's inside is visible.
+     These % match the hole in tops-frame.png — adjust if you replace the image. */
+  .window { position: absolute; left: 3.16%; top: 7.71%; right: 4.74%; bottom: 4.28%; overflow: hidden; }
+  .frame  { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+
+  /* ---------- The strip of door pairs (rolls upward on load) ---------- */
+  .strip { position: absolute; left: 0; top: 0; width: 100%; z-index: 2;
+           display: flex; flex-direction: column; gap: var(--strip-gap); will-change: transform; }
+  .strip.rolling { animation: rollUp var(--roll-time) cubic-bezier(.12,.8,.2,1) both; }
+  @keyframes rollUp { from { transform: translateY(0); } to { transform: translateY(var(--end)); } }
+
+  .pair { display: flex; height: var(--pair-h); }
+  .pair .door { width: 50%; height: 100%; display: block; object-fit: fill;
+                transition: transform 1.2s cubic-bezier(.65,0,.35,1); }
+  .pair.open .left  { transform: translateX(-100%); }
+  .pair.open .right { transform: translateX(100%); }
+
+  /* ---------- Inside the wardrobe: rails of clothes, 2 per row, scrollable ---------- */
+  .inside { position: absolute; inset: 0; z-index: 1; overflow-y: auto; overscroll-behavior: contain;
+            background: linear-gradient(#181412, #0e0c0b); padding: 18px 10px 30px;
+            pointer-events: none; scrollbar-width: thin; scrollbar-color: #3a3330 transparent; }
+  .opened .inside { pointer-events: auto; }
+  .row { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 6px; margin-bottom: 26px; }
+  .rail { position: absolute; left: -10px; right: -10px; top: 0; height: 9px; z-index: 2; border-radius: 5px;
+          background: linear-gradient(#e6c48a, #a37c45 60%, #6f532c); box-shadow: 0 3px 6px rgba(0,0,0,.6); }
+  .item { display: block; text-decoration: none; text-align: center; position: relative; z-index: 1; }
+  .item img { width: 100%; height: auto; display: block;
+              transform: perspective(900px) rotateY(10deg); transform-origin: top center;   /* hanging sideways */
+              transition: transform .6s cubic-bezier(.2,.8,.2,1); filter: drop-shadow(0 10px 12px rgba(0,0,0,.6)); }
+  .item:hover img, .item:focus-visible img { transform: perspective(700px) rotateY(0deg); } /* turns to face you */
+  .item span { display: block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-top: 6px; opacity: .8; }
+
+  /* ---------- Engraved label + "click to open" ---------- */
+  .label { position: absolute; inset: 0; z-index: 4; display: grid; place-content: center; text-align: center;
+           pointer-events: none; transition: opacity .4s; }
+  .engraved { font: 600 clamp(36px, 6vh, 64px)/1 "Cormorant Garamond", serif; letter-spacing: 8px; color: #141212;
+              text-shadow: 0 1px 0 rgba(255,255,255,.14), 0 -1px 0 rgba(0,0,0,.9); opacity: 0; }
+  .hint { font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #cfc8c0; margin-top: 14px; opacity: 0; }
+  .stopped .engraved { animation: fadeIn 1s forwards; }
+  .stopped .hint { animation: fadeIn .6s .9s forwards, blink 1.2s 1.6s infinite; }
+  .opened .label { opacity: 0; }
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes blink { 50% { opacity: .15; } }
+  .tops.stopped:not(.opened) { cursor: pointer; }
+
+  /* ---------- Bags / Bottoms placeholders (next steps) ---------- */
+  .placeholder { display: grid; place-content: center; border: 1px dashed #3a3230; color: #6b625c;
+                 font: 600 28px "Cormorant Garamond", serif; letter-spacing: 6px; }
+
+  /* ---------- Phones: everything stacked ---------- */
+  @media (max-width: 700px) {
+    body { overflow: auto; }
+    .collection { grid-template-columns: 1fr; grid-template-rows: auto; height: auto; }
+    .tops { grid-row: auto; height: auto; width: 100%; }
+    .bags, .bottoms { grid-column: auto; grid-row: auto; min-height: 30vh; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .strip.rolling { animation-duration: 1ms; }
+    .pair .door, .item img { transition: none; }
+    .hint { animation: none !important; opacity: 1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<main class="collection">
+  <section class="unit tops" id="tops" aria-label="Tops wardrobe">
+    <div class="window">
+      <div class="inside" id="topsInside"></div>     <!-- clothes (behind the doors) -->
+      <div class="strip" id="topsStrip"></div>       <!-- the rolling copies of the doors -->
+    </div>
+    <img class="frame" src="collection/tops-frame.png" alt="">   <!-- frame + hinges, never moves -->
+    <div class="label">
+      <h1 class="engraved">TOPS</h1>
+      <p class="hint">Click to open</p>
+    </div>
+  </section>
+
+  <section class="unit bags placeholder">BAGS</section>
+  <section class="unit bottoms placeholder">BOTTOMS</section>
+</main>
+
+<script src="collection.js"></script>
+</body>
+</html>
